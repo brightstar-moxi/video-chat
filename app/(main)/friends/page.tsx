@@ -173,6 +173,9 @@ function UserResult({
 }
 
 export default function FriendsPage() {
+    const startCall = useMutation(
+  api.calls.startCall
+);
   const { userId } = useAuth();
 
   const [username, setUsername] = useState("");
@@ -246,6 +249,24 @@ export default function FriendsPage() {
       console.error(error);
     }
   }
+
+  async function handleVideoCall(receiverId: any) {
+  if (!currentUser) return;
+
+  try {
+    const callId = await startCall({
+      callerId: currentUser._id,
+      receiverId,
+      type: "video",
+    });
+
+    console.log("Call started:", callId);
+
+    window.location.href = `/call/${callId}`;
+  } catch (error) {
+    console.error("Failed to start call:", error);
+  }
+}
 
   return (
     <main className="min-h-screen p-8">
@@ -350,17 +371,28 @@ export default function FriendsPage() {
           <div className="mt-4 space-y-3">
             {friends?.map((friend) => (
               <div
-                key={friend?._id}
-                className="rounded-xl border p-4"
-              >
-                <p className="font-semibold">
-                  {friend?.name || friend?.username}
-                </p>
+  key={friend?._id}
+  className="flex items-center justify-between rounded-xl border p-4"
+>
+  <div>
+    <p className="font-semibold">
+      {friend?.name || friend?.username}
+    </p>
 
-                <p className="text-sm text-gray-500">
-                  @{friend?.username}
-                </p>
-              </div>
+    <p className="text-sm text-gray-500">
+      @{friend?.username}
+    </p>
+  </div>
+
+  <button
+    onClick={() =>
+      handleVideoCall(friend!._id)
+    }
+    className="rounded-xl bg-black px-4 py-2 text-white"
+  >
+    Video Call
+  </button>
+</div>
             ))}
 
             {friends?.length === 0 && (
