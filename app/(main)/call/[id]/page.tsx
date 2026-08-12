@@ -527,6 +527,34 @@ useEffect(() => {
 
     router.push("/dashboard");
   }
+useEffect(() => {
+  if (!call) return;
+
+  if (call.status === "declined") {
+    localStreamRef.current
+      ?.getTracks()
+      .forEach((track) => track.stop());
+
+    peerConnectionRef.current?.close();
+
+    alert("Call declined");
+
+    router.push("/dashboard");
+    return;
+  }
+
+  if (call.status === "ended") {
+    localStreamRef.current
+      ?.getTracks()
+      .forEach((track) => track.stop());
+
+    peerConnectionRef.current?.close();
+
+    alert("The call has ended");
+
+    router.push("/dashboard");
+  }
+}, [call, router]);
 
   return (
     <main className="fixed inset-0 bg-black">
