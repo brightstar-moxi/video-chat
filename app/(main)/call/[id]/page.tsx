@@ -300,6 +300,39 @@ export default function CallPage() {
           remoteStream;
       }
     };
+    peerConnection.onconnectionstatechange = () => {
+  console.log(
+    "WebRTC connection:",
+    peerConnection.connectionState
+  );
+};
+
+peerConnection.oniceconnectionstatechange = () => {
+  console.log(
+    "ICE connection:",
+    peerConnection.iceConnectionState
+  );
+};
+
+peerConnection.onicegatheringstatechange = () => {
+  console.log(
+    "ICE gathering:",
+    peerConnection.iceGatheringState
+  );
+};
+
+peerConnection.ontrack = (event) => {
+  console.log("REMOTE TRACK RECEIVED:", event);
+
+  const [remoteStream] = event.streams;
+
+  if (remoteVideoRef.current && remoteStream) {
+    console.log("SETTING REMOTE STREAM");
+
+    remoteVideoRef.current.srcObject =
+      remoteStream;
+  }
+};
 
     peerConnection.onicecandidate = async (
       event
