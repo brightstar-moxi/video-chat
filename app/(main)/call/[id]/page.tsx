@@ -164,12 +164,26 @@ export default function CallPage() {
     async function startCamera() {
       try {
         console.log("Requesting camera and microphone...");
+if (!navigator.mediaDevices) {
+  console.error(
+    "Camera API unavailable. The page must use HTTPS or localhost."
+  );
+  return;
+}
+
 
         stream = await navigator.mediaDevices.getUserMedia({
           video: true,
           audio: true,
         });
-
+// stream = await navigator.mediaDevices.getUserMedia({
+//   video: {
+//     width: { ideal: 1280 },
+//     height: { ideal: 720 },
+//     facingMode: "user",
+//   },
+//   audio: false,
+// });
         console.log("Camera started successfully");
 
         if (localVideoRef.current) {
