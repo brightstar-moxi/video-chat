@@ -37,7 +37,7 @@ export default defineSchema({
     .index("by_friend", ["friendId"]),
 
 
-    calls: defineTable({
+   calls: defineTable({
   callerId: v.id("users"),
   receiverId: v.id("users"),
 
@@ -53,10 +53,20 @@ export default defineSchema({
     v.literal("video")
   ),
 
+  offer: v.optional(v.string()),
+  answer: v.optional(v.string()),
+
   createdAt: v.number(),
   endedAt: v.optional(v.number()),
 })
   .index("by_receiver", ["receiverId"])
   .index("by_caller", ["callerId"]),
+
+callCandidates: defineTable({
+  callId: v.id("calls"),
+  senderId: v.id("users"),
+  candidate: v.string(),
+})
+  .index("by_call", ["callId"]),
 });
 
