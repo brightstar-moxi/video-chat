@@ -165,7 +165,7 @@ export default function CallPage() {
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
-
+const [mediaReady, setMediaReady] = useState(false);
   const peerConnectionRef =
     useRef<RTCPeerConnection | null>(null);
 
@@ -234,6 +234,7 @@ export default function CallPage() {
         if (localVideoRef.current) {
           localVideoRef.current.srcObject = stream;
         }
+        setMediaReady(true);
       } catch (error) {
         console.error(
           "Camera/microphone error:",
@@ -253,12 +254,17 @@ export default function CallPage() {
    * Create WebRTC connection
    */
   useEffect(() => {
-  if (!currentUser || !call) return;
+ if (!currentUser || !call || !mediaReady) {
+  return;
+}
 
-  if (peerConnectionRef.current) return;
+if (peerConnectionRef.current) {
+  return;
+};
 
   const user = currentUser;
   const activeCall = call;
+  
 
   let cancelled = false;
 
@@ -287,19 +293,19 @@ export default function CallPage() {
         );
       });
 
-    peerConnection.ontrack = (event) => {
-      console.log("Remote stream received");
+    // peerConnection.ontrack = (event) => {
+    //   console.log("Remote stream received");
 
-      const [remoteStream] = event.streams;
+    //   const [remoteStream] = event.streams;
 
-      if (
-        remoteVideoRef.current &&
-        remoteStream
-      ) {
-        remoteVideoRef.current.srcObject =
-          remoteStream;
-      }
-    };
+    //   if (
+    //     remoteVideoRef.current &&
+    //     remoteStream
+    //   ) {
+    //     remoteVideoRef.current.srcObject =
+    //       remoteStream;
+    //   }
+    // };
     peerConnection.onconnectionstatechange = () => {
   console.log(
     "WebRTC connection:",
@@ -375,33 +381,40 @@ peerConnection.ontrack = (event) => {
     }
 
     // RECEIVER
-    if (
-      activeCall.receiverId === user._id
-    ) {
-      if (!activeCall.offer) return;
+   // RECEIVER
+if (activeCall.receiverId === user._id) {
+  console.log("RECEIVER: I am the receiver");
 
-      const offer = JSON.parse(
-        activeCall.offer
-      );
+  if (!activeCall.offer) {
+    console.log("RECEIVER: Waiting for offer");
+    return;
+  }
 
-      await peerConnection.setRemoteDescription(
-        new RTCSessionDescription(offer)
-      );
+  console.log("RECEIVER: Offer received");
 
-      const answer =
-        await peerConnection.createAnswer();
+  const offer = JSON.parse(activeCall.offer);
 
-      await peerConnection.setLocalDescription(
-        answer
-      );
+  await peerConnection.setRemoteDescription(
+    new RTCSessionDescription(offer)
+  );
 
-      if (cancelled) return;
+  console.log("RECEIVER: Remote description set");
 
-      await setAnswer({
-        callId: activeCall._id,
-        answer: JSON.stringify(answer),
-      });
-    }
+  const answer = await peerConnection.createAnswer();
+
+  await peerConnection.setLocalDescription(answer);
+
+  console.log("RECEIVER: Answer created");
+
+  if (cancelled) return;
+
+  await setAnswer({
+    callId: activeCall._id,
+    answer: JSON.stringify(answer),
+  });
+
+  console.log("RECEIVER: Answer saved to Convex");
+}
   }
 
   setupWebRTC();
@@ -412,6 +425,7 @@ peerConnection.ontrack = (event) => {
 }, [
   currentUser,
   call,
+   mediaReady,
   addCandidate,
   setOffer,
   setAnswer,
@@ -420,51 +434,97 @@ peerConnection.ontrack = (event) => {
   /*
    * Caller receives answer
    */
-  useEffect(() => {
-    const peerConnection =
-      peerConnectionRef.current;
+  // useEffect(() => {
+  //   const peerConnection =
+  //     peerConnectionRef.current;
 
-    if (
-      !peerConnection ||
-      !call ||
-      !currentUser
-    ) {
-      return;
+  //   if (
+  //     !peerConnection ||
+  //     !call ||
+  //     !currentUser
+  //   ) {
+  //     return;
+  //   }
+
+  //   if (
+  //     call.callerId !== currentUser._id
+  //   ) {
+  //     return;
+  //   }
+
+  //   if (!call.answer) return;
+
+  //   if (
+  //     peerConnection.currentRemoteDescription
+  //   ) {
+  //     return;
+  //   }
+
+  //   async function setRemoteAnswer() {
+  //     try {
+  //       const answer =
+  //         JSON.parse(call!.answer!);
+
+  //       await peerConnection!.setRemoteDescription(
+  //         new RTCSessionDescription(answer)
+  //       );
+  //     } catch (error) {
+  //       console.error(
+  //         "Failed to set remote answer:",
+  //         error
+  //       );
+  //     }
+  //   }
+
+  //   setRemoteAnswer();
+  // }, [call, currentUser]);
+useEffect(() => {
+  if (!call || !currentUser) {
+    return;
+  }
+
+  if (call.callerId !== currentUser._id) {
+    return;
+  }
+
+  if (!call.answer) {
+    return;
+  }
+
+  const connection = peerConnectionRef.current;
+
+  if (!connection) {
+    return;
+  }
+
+  if (connection.currentRemoteDescription) {
+    return;
+  }
+
+  const answerString = call.answer;
+
+  async function setRemoteAnswer(
+    peer: RTCPeerConnection,
+    answer: string
+  ) {
+    try {
+      const parsedAnswer = JSON.parse(answer);
+
+      await peer.setRemoteDescription(
+        new RTCSessionDescription(parsedAnswer)
+      );
+
+      console.log("CALLER: Remote answer applied");
+    } catch (error) {
+      console.error(
+        "Failed to set remote answer:",
+        error
+      );
     }
+  }
 
-    if (
-      call.callerId !== currentUser._id
-    ) {
-      return;
-    }
-
-    if (!call.answer) return;
-
-    if (
-      peerConnection.currentRemoteDescription
-    ) {
-      return;
-    }
-
-    async function setRemoteAnswer() {
-      try {
-        const answer =
-          JSON.parse(call!.answer!);
-
-        await peerConnection!.setRemoteDescription(
-          new RTCSessionDescription(answer)
-        );
-      } catch (error) {
-        console.error(
-          "Failed to set remote answer:",
-          error
-        );
-      }
-    }
-
-    setRemoteAnswer();
-  }, [call, currentUser]);
-
+  setRemoteAnswer(connection, answerString);
+}, [call, currentUser]);
   /*
    * Receive ICE candidates
    */
