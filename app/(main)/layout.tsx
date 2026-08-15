@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
-import IncomingCallPopup from "./components/IncomingCallPopup";
+import IncomingCallPopup from "./components/IncomingCall";
 
 function VideoIcon() {
   return (
