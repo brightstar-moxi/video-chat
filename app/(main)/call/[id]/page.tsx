@@ -648,15 +648,15 @@ useEffect(() => {
 
       {/* Local preview */}
       <div className="absolute right-5 top-5 h-40 w-28 overflow-hidden rounded-2xl bg-gray-900 shadow-2xl sm:h-48 sm:w-64">
-       {/* <video
+       <video
   ref={localVideoRef}
   autoPlay
   muted
   playsInline
   className="h-full w-full object-cover scale-x-[-1]"
-/> */}
+/>
 
-{remoteCameraEnabled === false ? (
+{/* {remoteCameraEnabled === false ? (
   <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#101116]">
     <div className="flex h-28 w-28 items-center justify-center rounded-full bg-violet-500/20 text-4xl text-violet-300">
       👤
@@ -674,8 +674,8 @@ useEffect(() => {
     className="h-full w-full object-cover"
   />
 )}
-      </div>
-
+      </div> */}
+</div>
       {/* Controls */}
       <div className="absolute bottom-8 left-1/2 flex -translate-x-1/2 items-center gap-3 rounded-full bg-black/50 p-3 backdrop-blur">
         <button
@@ -710,37 +710,6 @@ useEffect(() => {
           End
         </button>
       </div>
-
-      {/* <div className="flex items-center gap-3">
-  <button
-    onClick={toggleMicrophone}
-    className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white"
-  >
-    {micEnabled ? "🎤" : "🔇"}
-  </button>
-
-  <button
-    onClick={toggleCamera}
-    className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white"
-  >
-    {cameraEnabled ? "📹" : "🚫"}
-  </button>
-
-  <button
-    onClick={switchCamera}
-    disabled={!cameraEnabled}
-    className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white disabled:opacity-40"
-  >
-    ↻
-  </button>
-
-  <button
-    onClick={handleEndCall}
-    className="flex h-12 w-12 items-center justify-center rounded-full bg-red-600 text-white"
-  >
-    ☎
-  </button>
-</div> */}
     </main>
   );
 }
