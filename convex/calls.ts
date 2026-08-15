@@ -141,16 +141,37 @@ export const getIncomingCall = query({
   },
 
   handler: async (ctx, args) => {
-    return await ctx.db
-      .query("calls")
-      .withIndex("by_receiver", (q) =>
-        q.eq("receiverId", args.userId)
-      )
-      .filter((q) =>
-        q.eq(q.field("status"), "ringing")
-      )
-      .order("desc")
-      .first();
+    // return await ctx.db
+    //   .query("calls")
+    //   .withIndex("by_receiver", (q) =>
+    //     q.eq("receiverId", args.userId)
+    //   )
+    //   .filter((q) =>
+    //     q.eq(q.field("status"), "ringing")
+    //   )
+    //   .order("desc")
+    //   .first();
+    const call = await ctx.db
+  .query("calls")
+  .withIndex("by_receiver", (q) =>
+    q.eq("receiverId", args.userId)
+  )
+  .filter((q) =>
+    q.eq(q.field("status"), "ringing")
+  )
+  .order("desc")
+  .first();
+
+if (!call) {
+  return null;
+}
+
+const caller = await ctx.db.get(call.callerId);
+
+return {
+  ...call,
+  caller,
+};
   },
 });
 
@@ -269,5 +290,40 @@ export const endCall = mutation({
       status: "ended",
       endedAt: Date.now(),
     });
+  },
+});
+
+export const getRecentCalls = query({
+  args: {
+    userId: v.id("users"),
+  },
+
+  handler: async (ctx, args) => {
+    const calls = await ctx.db
+      .query("calls")
+      .filter((q) =>
+        q.or(
+          q.eq(q.field("callerId"), args.userId),
+          q.eq(q.field("receiverId"), args.userId)
+        )
+      )
+      .order("desc")
+      .take(20);
+
+    return await Promise.all(
+      calls.map(async (call) => {
+        const otherUserId =
+          call.callerId === args.userId
+            ? call.receiverId
+            : call.callerId;
+
+        const otherUser = await ctx.db.get(otherUserId);
+
+        return {
+          ...call,
+          otherUser,
+        };
+      })
+    );
   },
 });

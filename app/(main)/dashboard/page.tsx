@@ -124,6 +124,13 @@ export default function DashboardPage() {
       : "skip"
   );
 
+  const recentCalls = useQuery(
+  api.calls.getRecentCalls,
+  currentUser
+    ? { userId: currentUser._id }
+    : "skip"
+);
+
   const displayName =
     currentUser?.name ||
     currentUser?.username ||
@@ -363,7 +370,78 @@ export default function DashboardPage() {
               </div>
             </div>
           </section>
+          
         )}
+        <section className="mt-8">
+  <div className="flex items-center justify-between">
+    <div>
+      <h2 className="text-xl font-semibold">
+        Recent Calls
+      </h2>
+
+      <p className="mt-1 text-sm text-white/30">
+        Your latest conversations
+      </p>
+    </div>
+
+    <Link
+      href="/calls"
+      className="text-sm text-violet-300 hover:text-violet-200"
+    >
+      View all
+    </Link>
+  </div>
+
+  <div className="mt-4 space-y-3">
+    {recentCalls?.map((call) => (
+      <div
+        key={call._id}
+        className="flex items-center justify-between rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4"
+      >
+        <div className="flex items-center gap-3">
+          <Avatar
+            name={
+              call.otherUser?.name ||
+              call.otherUser?.username
+            }
+            image={call.otherUser?.image}
+          />
+
+          <div>
+            <p className="font-medium">
+              {call.otherUser?.name ||
+                call.otherUser?.username}
+            </p>
+
+            <p className="text-xs text-white/30">
+              {call.type === "video"
+                ? "Video call"
+                : "Audio call"}
+            </p>
+          </div>
+        </div>
+
+        <span
+          className={`text-xs ${
+            call.status === "accepted"
+              ? "text-emerald-300"
+              : call.status === "declined"
+              ? "text-red-300"
+              : "text-white/30"
+          }`}
+        >
+          {call.status}
+        </span>
+      </div>
+    ))}
+
+    {recentCalls?.length === 0 && (
+      <div className="rounded-2xl border border-dashed border-white/[0.08] p-8 text-center text-sm text-white/30">
+        No recent calls
+      </div>
+    )}
+  </div>
+</section>
     </div>
   );
 }

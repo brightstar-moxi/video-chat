@@ -29,9 +29,9 @@
 // }
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
-import ConvexClientProvider from "./components/ConvexClientProvider";
+import ConvexClientProvider from "./(main)/components/ConvexClientProvider";
 import "./globals.css";
-import IncomingCall from "./components/IncomingCall";
+import IncomingCall from "./(main)/components/IncomingCall";
 
 export const metadata: Metadata = {
   title: "Video Chat",
