@@ -677,7 +677,7 @@ useEffect(() => {
       </div>
 
       {/* Controls */}
-      {/* <div className="absolute bottom-8 left-1/2 flex -translate-x-1/2 items-center gap-3 rounded-full bg-black/50 p-3 backdrop-blur">
+      <div className="absolute bottom-8 left-1/2 flex -translate-x-1/2 items-center gap-3 rounded-full bg-black/50 p-3 backdrop-blur">
         <button
           onClick={toggleMicrophone}
           className="rounded-full text-black bg-white px-5 py-3 font-medium"
@@ -709,9 +709,9 @@ useEffect(() => {
         >
           End
         </button>
-      </div> */}
+      </div>
 
-      <div className="flex items-center gap-3">
+      {/* <div className="flex items-center gap-3">
   <button
     onClick={toggleMicrophone}
     className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white"
@@ -740,7 +740,7 @@ useEffect(() => {
   >
     ☎
   </button>
-</div>
+</div> */}
     </main>
   );
 }
