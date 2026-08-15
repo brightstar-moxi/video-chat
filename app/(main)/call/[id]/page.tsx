@@ -62,6 +62,66 @@ const [mediaReady, setMediaReady] = useState(false);
   );
   const endCall = useMutation(api.calls.endCall);
 
+  const [cameraFacingMode, setCameraFacingMode] =
+  useState<"user" | "environment">("user");
+
+async function switchCamera() {
+  const stream = localStreamRef.current;
+
+  if (!stream) return;
+
+  const videoTrack = stream.getVideoTracks()[0];
+
+  if (!videoTrack) return;
+
+  const nextMode =
+    cameraFacingMode === "user"
+      ? "environment"
+      : "user";
+
+  try {
+    const newStream =
+      await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: {
+            ideal: nextMode,
+          },
+        },
+        audio: false,
+      });
+
+    const newTrack =
+      newStream.getVideoTracks()[0];
+
+    const sender =
+      peerConnectionRef.current
+        ?.getSenders()
+        .find(
+          (sender) =>
+            sender.track?.kind === "video"
+        );
+
+    if (sender) {
+      await sender.replaceTrack(newTrack);
+    }
+
+    videoTrack.stop();
+
+    stream.removeTrack(videoTrack);
+    stream.addTrack(newTrack);
+
+    if (localVideoRef.current) {
+      localVideoRef.current.srcObject = stream;
+    }
+
+    setCameraFacingMode(nextMode);
+  } catch (error) {
+    console.error(
+      "Failed to switch camera:",
+      error
+    );
+  }
+}
   /*
    * Create local camera/microphone
    */
@@ -559,7 +619,14 @@ useEffect(() => {
             ? "Camera Off"
             : "Camera On"}
         </button>
-
+<button
+  onClick={switchCamera}
+  disabled={!cameraEnabled}
+  className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-xl transition hover:bg-white/20 disabled:opacity-40"
+  title="Switch camera"
+>
+  ↻
+</button>
         <button
           onClick={handleEndCall}
           className="rounded-full bg-red-600 px-6 py-3 font-medium text-white"
