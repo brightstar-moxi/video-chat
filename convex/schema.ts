@@ -11,6 +11,8 @@ export default defineSchema({
     bio: v.optional(v.string()),
     isOnline: v.boolean(),
     lastSeen: v.optional(v.number()),
+    callerCameraEnabled: v.optional(v.boolean()),
+receiverCameraEnabled: v.optional(v.boolean()),
   })
     .index("by_clerk_id", ["clerkId"])
     .index("by_username", ["username"]),
@@ -37,7 +39,7 @@ export default defineSchema({
     .index("by_friend", ["friendId"]),
 
 
-   calls: defineTable({
+  calls: defineTable({
   callerId: v.id("users"),
   receiverId: v.id("users"),
 
@@ -55,6 +57,9 @@ export default defineSchema({
 
   offer: v.optional(v.string()),
   answer: v.optional(v.string()),
+
+  callerCameraEnabled: v.optional(v.boolean()),
+  receiverCameraEnabled: v.optional(v.boolean()),
 
   createdAt: v.number(),
   endedAt: v.optional(v.number()),

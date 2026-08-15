@@ -95,6 +95,7 @@ import { useAuth } from "@clerk/nextjs";
 import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
 import { api } from "@/convex/_generated/api";
+import { useEffect } from "react";
 
 export default function IncomingCallPopup() {
   const { userId } = useAuth();
@@ -125,6 +126,18 @@ export default function IncomingCallPopup() {
 }
 
 const activeCall = incomingCall;
+
+useEffect(() => {
+  if (!incomingCall) return;
+
+  if ("vibrate" in navigator) {
+    navigator.vibrate([300, 200, 300, 200, 500]);
+  }
+
+  return () => {
+    navigator.vibrate?.(0);
+  };
+}, [incomingCall]);
 
 async function handleAccept() {
   try {

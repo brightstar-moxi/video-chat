@@ -327,3 +327,38 @@ export const getRecentCalls = query({
     );
   },
 });
+
+
+export const updateCameraState = mutation({
+  args: {
+    callId: v.id("calls"),
+    userId: v.id("users"),
+    enabled: v.boolean(),
+  },
+
+  handler: async (ctx, args) => {
+    const call = await ctx.db.get(args.callId);
+
+    if (!call) {
+      throw new Error("Call not found");
+    }
+
+    if (call.callerId === args.userId) {
+      await ctx.db.patch(call._id, {
+        callerCameraEnabled: args.enabled,
+      });
+
+      return;
+    }
+
+    if (call.receiverId === args.userId) {
+      await ctx.db.patch(call._id, {
+        receiverCameraEnabled: args.enabled,
+      });
+
+      return;
+    }
+
+    throw new Error("You are not part of this call");
+  },
+});

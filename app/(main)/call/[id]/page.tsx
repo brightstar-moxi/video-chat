@@ -16,7 +16,9 @@ export default function CallPage() {
   const router = useRouter();
 
   const callId = params.id as string;
-
+const updateCameraState = useMutation(
+  api.calls.updateCameraState
+);
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
 const [mediaReady, setMediaReady] = useState(false);
@@ -45,6 +47,11 @@ const [mediaReady, setMediaReady] = useState(false);
     callId ? { callId: callId as any } : "skip"
   );
 
+ const remoteCameraEnabled =
+    call?.callerId === currentUser?._id
+      ? call?.receiverCameraEnabled
+      : call?.callerCameraEnabled;
+
   const candidates = useQuery(
     api.calls.getCandidates,
     currentUser && callId
@@ -68,13 +75,17 @@ const [mediaReady, setMediaReady] = useState(false);
 async function switchCamera() {
   const stream = localStreamRef.current;
 
-  if (!stream) return;
+  if (!stream || !peerConnectionRef.current) {
+    return;
+  }
 
-  const videoTrack = stream.getVideoTracks()[0];
+  const currentVideoTrack = stream.getVideoTracks()[0];
 
-  if (!videoTrack) return;
+  if (!currentVideoTrack) {
+    return;
+  }
 
-  const nextMode =
+  const nextFacingMode =
     cameraFacingMode === "user"
       ? "environment"
       : "user";
@@ -83,38 +94,51 @@ async function switchCamera() {
     const newStream =
       await navigator.mediaDevices.getUserMedia({
         video: {
-          facingMode: {
-            ideal: nextMode,
-          },
+          facingMode: nextFacingMode,
         },
         audio: false,
       });
 
-    const newTrack =
+    const newVideoTrack =
       newStream.getVideoTracks()[0];
 
+    if (!newVideoTrack) {
+      newStream.getTracks().forEach((track) =>
+        track.stop()
+      );
+      return;
+    }
+
+    // Replace the video track being sent through WebRTC
     const sender =
       peerConnectionRef.current
-        ?.getSenders()
+        .getSenders()
         .find(
           (sender) =>
             sender.track?.kind === "video"
         );
 
     if (sender) {
-      await sender.replaceTrack(newTrack);
+      await sender.replaceTrack(newVideoTrack);
     }
 
-    videoTrack.stop();
+    // Replace local stream track
+    stream.removeTrack(currentVideoTrack);
+    stream.addTrack(newVideoTrack);
 
-    stream.removeTrack(videoTrack);
-    stream.addTrack(newTrack);
+    currentVideoTrack.stop();
 
+    // Update local preview
     if (localVideoRef.current) {
       localVideoRef.current.srcObject = stream;
     }
 
-    setCameraFacingMode(nextMode);
+    setCameraFacingMode(nextFacingMode);
+
+    console.log(
+      "Camera switched to:",
+      nextFacingMode
+    );
   } catch (error) {
     console.error(
       "Failed to switch camera:",
@@ -479,21 +503,54 @@ useEffect(() => {
   /*
    * Toggle camera
    */
-  function toggleCamera() {
-    const stream =
-      localStreamRef.current;
+  // function toggleCamera() {
+  //   const stream =
+  //     localStreamRef.current;
 
-    if (!stream) return;
+  //   if (!stream) return;
 
-    const track =
-      stream.getVideoTracks()[0];
+  //   const track =
+  //     stream.getVideoTracks()[0];
 
-    if (!track) return;
+  //   if (!track) return;
 
-    track.enabled = !track.enabled;
+  //   track.enabled = !track.enabled;
 
-    setCameraEnabled(track.enabled);
+  //   setCameraEnabled(track.enabled);
+  // }
+
+  async function toggleCamera() {
+  const stream = localStreamRef.current;
+
+  if (!stream || !currentUser || !call) {
+    return;
   }
+
+  const track = stream.getVideoTracks()[0];
+
+  if (!track) {
+    return;
+  }
+
+  const enabled = !track.enabled;
+
+  track.enabled = enabled;
+
+  setCameraEnabled(enabled);
+
+  try {
+    await updateCameraState({
+      callId: call._id,
+      userId: currentUser._id,
+      enabled,
+    });
+  } catch (error) {
+    console.error(
+      "Failed to update camera state:",
+      error
+    );
+  }
+}
 
   /*
    * Toggle microphone
@@ -591,17 +648,36 @@ useEffect(() => {
 
       {/* Local preview */}
       <div className="absolute right-5 top-5 h-40 w-28 overflow-hidden rounded-2xl bg-gray-900 shadow-2xl sm:h-48 sm:w-64">
-       <video
+       {/* <video
   ref={localVideoRef}
   autoPlay
   muted
   playsInline
   className="h-full w-full object-cover scale-x-[-1]"
-/>
+/> */}
+
+{remoteCameraEnabled === false ? (
+  <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#101116]">
+    <div className="flex h-28 w-28 items-center justify-center rounded-full bg-violet-500/20 text-4xl text-violet-300">
+      👤
+    </div>
+
+    <p className="mt-5 text-lg font-medium text-white">
+      Camera Off
+    </p>
+  </div>
+) : (
+  <video
+    ref={remoteVideoRef}
+    autoPlay
+    playsInline
+    className="h-full w-full object-cover"
+  />
+)}
       </div>
 
       {/* Controls */}
-      <div className="absolute bottom-8 left-1/2 flex -translate-x-1/2 items-center gap-3 rounded-full bg-black/50 p-3 backdrop-blur">
+      {/* <div className="absolute bottom-8 left-1/2 flex -translate-x-1/2 items-center gap-3 rounded-full bg-black/50 p-3 backdrop-blur">
         <button
           onClick={toggleMicrophone}
           className="rounded-full text-black bg-white px-5 py-3 font-medium"
@@ -622,7 +698,7 @@ useEffect(() => {
 <button
   onClick={switchCamera}
   disabled={!cameraEnabled}
-  className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-xl transition hover:bg-white/20 disabled:opacity-40"
+  className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-xl transition hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-40"
   title="Switch camera"
 >
   ↻
@@ -633,7 +709,38 @@ useEffect(() => {
         >
           End
         </button>
-      </div>
+      </div> */}
+
+      <div className="flex items-center gap-3">
+  <button
+    onClick={toggleMicrophone}
+    className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white"
+  >
+    {micEnabled ? "🎤" : "🔇"}
+  </button>
+
+  <button
+    onClick={toggleCamera}
+    className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white"
+  >
+    {cameraEnabled ? "📹" : "🚫"}
+  </button>
+
+  <button
+    onClick={switchCamera}
+    disabled={!cameraEnabled}
+    className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white disabled:opacity-40"
+  >
+    ↻
+  </button>
+
+  <button
+    onClick={handleEndCall}
+    className="flex h-12 w-12 items-center justify-center rounded-full bg-red-600 text-white"
+  >
+    ☎
+  </button>
+</div>
     </main>
   );
 }
