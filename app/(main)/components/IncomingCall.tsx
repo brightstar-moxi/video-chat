@@ -120,21 +120,35 @@ export default function IncomingCallPopup() {
     return null;
   }
 
-  async function handleAccept() {
+ if (!incomingCall) {
+  return null;
+}
+
+const activeCall = incomingCall;
+
+async function handleAccept() {
+  try {
     await respondToCall({
-      callId: incomingCall._id,
+      callId: activeCall._id,
       response: "accepted",
     });
 
-    router.push(`/call/${incomingCall._id}`);
+    router.push(`/call/${activeCall._id}`);
+  } catch (error) {
+    console.error("Failed to accept call:", error);
   }
+}
 
-  async function handleDecline() {
+async function handleDecline() {
+  try {
     await respondToCall({
-      callId: incomingCall._id,
+      callId: activeCall._id,
       response: "declined",
     });
+  } catch (error) {
+    console.error("Failed to decline call:", error);
   }
+}
 
   return (
     <div className="fixed right-5 top-5 z-[9999] w-[360px] rounded-3xl border border-white/10 bg-[#15151b]/95 p-5 shadow-2xl backdrop-blur-xl">
