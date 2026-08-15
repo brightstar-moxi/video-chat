@@ -312,6 +312,7 @@ import { useAuth } from "@clerk/nextjs";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 function SearchIcon() {
   return (
@@ -411,6 +412,8 @@ function Avatar({
   name?: string | null;
   image?: string | null;
 }) {
+
+
   if (image) {
     return (
       <img
@@ -536,6 +539,25 @@ export default function FriendsPage() {
   const respondToFriendRequest = useMutation(
     api.friends.respondToFriendRequest
   );
+
+  const startCall = useMutation(api.calls.startCall);
+const router = useRouter();
+
+async function handleVideoCall(receiverId: any) {
+  if (!currentUser) return;
+
+  try {
+    const callId = await startCall({
+      callerId: currentUser._id,
+      receiverId,
+      type: "video",
+    });
+
+    router.push(`/call/${callId}`);
+  } catch (error) {
+    console.error("Failed to start call:", error);
+  }
+}
 
   async function handleAddFriend(receiverId: string) {
     if (!currentUser || loading) return;
@@ -787,47 +809,50 @@ export default function FriendsPage() {
           </div>
         ) : (
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {cleanFriends.map((friend) => (
-              <div
-                key={friend._id}
-                className="group rounded-2xl border border-white/[0.07] bg-white/[0.025] p-5 transition hover:border-white/[0.12] hover:bg-white/[0.04]"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="relative">
-                    <Avatar
-                      name={
-                        friend.name || friend.username
-                      }
-                      image={friend.image}
-                    />
+            {cleanFriends.map((friend) => {
+ 
 
-                    <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#11131a] bg-emerald-400" />
-                  </div>
+  return (
+    <div
+      key={friend._id}
+      className="group rounded-2xl border border-white/[0.07] bg-white/[0.025] p-5 transition hover:border-white/[0.12] hover:bg-white/[0.04]"
+    >
+      <div className="flex items-start justify-between">
+        <div className="relative">
+          <Avatar
+            name={friend.name || friend.username}
+            image={friend.image}
+          />
 
-                  <Link
-                    href="/calls"
-                    className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/[0.05] text-white/40 transition hover:bg-violet-500/15 hover:text-violet-300"
-                  >
-                    <VideoIcon />
-                  </Link>
-                </div>
+          <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#11131a] bg-emerald-400" />
+        </div>
 
-                <div className="mt-5">
-                  <p className="truncate font-medium">
-                    {friend.name || friend.username}
-                  </p>
+        <button
+  onClick={() => handleVideoCall(friend._id)}
+  className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/[0.05] text-white/40 transition hover:bg-violet-500/15 hover:text-violet-300"
+  title="Video call"
+>
+  <VideoIcon />
+</button>
+      </div>
 
-                  <p className="mt-1 truncate text-sm text-white/30">
-                    @{friend.username}
-                  </p>
-                </div>
+      <div className="mt-5">
+        <p className="truncate font-medium">
+          {friend.name || friend.username}
+        </p>
 
-                <div className="mt-4 flex items-center gap-2 text-xs text-emerald-300/70">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                  Connected
-                </div>
-              </div>
-            ))}
+        <p className="mt-1 truncate text-sm text-white/30">
+          @{friend.username}
+        </p>
+      </div>
+
+      <div className="mt-4 flex items-center gap-2 text-xs text-emerald-300/70">
+        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+        Connected
+      </div>
+    </div>
+  );
+})}
           </div>
         )}
       </section>

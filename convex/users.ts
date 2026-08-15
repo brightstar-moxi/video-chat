@@ -18,9 +18,15 @@ export const createUser = mutation({
       )
       .unique();
 
-    if (existingUser) {
-      return existingUser._id;
-    }
+   if (existingUser) {
+  await ctx.db.patch(existingUser._id, {
+    name: args.name,
+    email: args.email,
+    image: args.image,
+  });
+
+  return existingUser._id;
+}
 
     return await ctx.db.insert("users", {
       clerkId: args.clerkId,
