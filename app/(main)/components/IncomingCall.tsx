@@ -103,7 +103,9 @@ export default function IncomingCallPopup() {
 
   const currentUser = useQuery(
     api.users.getCurrentUser,
-    userId ? { clerkId: userId } : "skip"
+    userId
+      ? { clerkId: userId }
+      : "skip"
   );
 
   const incomingCall = useQuery(
@@ -117,70 +119,115 @@ export default function IncomingCallPopup() {
     api.calls.respondToCall
   );
 
+  /*
+   * Vibrate when an incoming call appears
+   *
+   * IMPORTANT:
+   * This Hook must stay above the conditional return.
+   */
+  useEffect(() => {
+    if (!incomingCall) return;
+
+    if (
+      "vibrate" in navigator &&
+      typeof navigator.vibrate === "function"
+    ) {
+      navigator.vibrate([
+        300,
+        200,
+        300,
+        200,
+        500,
+      ]);
+    }
+
+    return () => {
+      if (
+        "vibrate" in navigator &&
+        typeof navigator.vibrate === "function"
+      ) {
+        navigator.vibrate(0);
+      }
+    };
+  }, [incomingCall]);
+
+  /*
+   * Accept call
+   */
+  async function handleAccept() {
+    if (!incomingCall) return;
+
+    try {
+      await respondToCall({
+        callId: incomingCall._id,
+        response: "accepted",
+      });
+
+      router.push(
+        `/call/${incomingCall._id}`
+      );
+    } catch (error) {
+      console.error(
+        "Failed to accept call:",
+        error
+      );
+    }
+  }
+
+  /*
+   * Decline call
+   */
+  async function handleDecline() {
+    if (!incomingCall) return;
+
+    try {
+      await respondToCall({
+        callId: incomingCall._id,
+        response: "declined",
+      });
+    } catch (error) {
+      console.error(
+        "Failed to decline call:",
+        error
+      );
+    }
+  }
+
+  /*
+   * No incoming call
+   */
   if (!incomingCall) {
     return null;
   }
 
- if (!incomingCall) {
-  return null;
-}
-
-const activeCall = incomingCall;
-
-useEffect(() => {
-  if (!incomingCall) return;
-
-  if ("vibrate" in navigator) {
-    navigator.vibrate([300, 200, 300, 200, 500]);
-  }
-
-  return () => {
-    navigator.vibrate?.(0);
-  };
-}, [incomingCall]);
-
-async function handleAccept() {
-  try {
-    await respondToCall({
-      callId: activeCall._id,
-      response: "accepted",
-    });
-
-    router.push(`/call/${activeCall._id}`);
-  } catch (error) {
-    console.error("Failed to accept call:", error);
-  }
-}
-
-async function handleDecline() {
-  try {
-    await respondToCall({
-      callId: activeCall._id,
-      response: "declined",
-    });
-  } catch (error) {
-    console.error("Failed to decline call:", error);
-  }
-}
-
   return (
     <div className="fixed right-5 top-5 z-[9999] w-[360px] rounded-3xl border border-white/10 bg-[#15151b]/95 p-5 shadow-2xl backdrop-blur-xl">
       <div className="flex items-center gap-4">
+        {/* Caller Avatar */}
         {incomingCall.caller?.image ? (
           <img
             src={incomingCall.caller.image}
-            alt={incomingCall.caller.username}
+            alt={
+              incomingCall.caller.name ||
+              incomingCall.caller.username ||
+              "Caller"
+            }
             className="h-14 w-14 rounded-full object-cover"
           />
         ) : (
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-violet-500/20 text-lg font-semibold text-violet-300">
-            {incomingCall.caller?.username
-              ?.charAt(0)
+            {(
+              incomingCall.caller?.name ||
+              incomingCall.caller?.username ||
+              "?"
+            )
+              .charAt(0)
               .toUpperCase()}
           </div>
         )}
 
-        <div>
+        {/* Caller information */}
+        <div className="min-w-0">
           <p className="text-xs text-white/40">
             Incoming{" "}
             {incomingCall.type === "video"
@@ -189,17 +236,20 @@ async function handleDecline() {
             call
           </p>
 
-          <p className="mt-1 font-semibold">
+          <p className="mt-1 truncate font-semibold text-white">
             {incomingCall.caller?.name ||
-              incomingCall.caller?.username}
+              incomingCall.caller?.username ||
+              "Unknown user"}
           </p>
 
-          <p className="text-sm text-white/30">
-            @{incomingCall.caller?.username}
+          <p className="truncate text-sm text-white/30">
+            @{incomingCall.caller?.username ||
+              "unknown"}
           </p>
         </div>
       </div>
 
+      {/* Actions */}
       <div className="mt-5 flex gap-3">
         <button
           onClick={handleDecline}
