@@ -1607,27 +1607,15 @@ useEffect(() => {
 useEffect(() => {
   if (!call) return;
 
-  if (call.status === "declined") {
+  if (
+    call.status === "declined" ||
+    call.status === "ended"
+  ) {
     localStreamRef.current
       ?.getTracks()
       .forEach((track) => track.stop());
 
     peerConnectionRef.current?.close();
-
-    alert("Call declined");
-
-    router.push("/dashboard");
-    return;
-  }
-
-  if (call.status === "ended") {
-    localStreamRef.current
-      ?.getTracks()
-      .forEach((track) => track.stop());
-
-    peerConnectionRef.current?.close();
-
-    alert("The call has ended");
 
     router.push("/dashboard");
   }
@@ -1692,18 +1680,60 @@ useEffect(() => {
   <RotateCameraIcon />
 </button>
 
-      {/* Local preview */}
-      <div className="absolute right-5 top-5 h-40 w-28 overflow-hidden rounded-2xl bg-gray-900 shadow-2xl sm:h-48 sm:w-64">
-       <video
-  ref={localVideoRef}
-  autoPlay
-  muted
-  playsInline
-  className="h-full w-full object-cover scale-x-[-1]"
-/>
+     {/* Local preview */}
+<div className="absolute right-5 top-5 h-40 w-28 overflow-hidden rounded-2xl bg-[#11131a] shadow-2xl sm:h-48 sm:w-64">
 
-      </div>
+  {/* Camera video */}
+  <video
+    ref={localVideoRef}
+    autoPlay
+    muted
+    playsInline
+    className={`h-full w-full object-cover scale-x-[-1] ${
+      cameraEnabled ? "block" : "hidden"
+    }`}
+  />
 
+  {/* Avatar when camera is off */}
+  {!cameraEnabled && (
+    <div className="absolute inset-0 flex flex-col items-center justify-center">
+      {currentUser?.image ? (
+        <img
+          src={currentUser.image}
+          alt={
+            currentUser.name ||
+            currentUser.username ||
+            "You"
+          }
+          className="h-16 w-16 rounded-full object-cover ring-2 ring-white/10"
+        />
+      ) : (
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-blue-500 text-xl font-semibold text-white">
+          {(
+            currentUser?.name ||
+            currentUser?.username ||
+            "?"
+          )
+            .charAt(0)
+            .toUpperCase()}
+        </div>
+      )}
+
+      <span className="mt-2 text-xs text-white/50">
+        Camera off
+      </span>
+    </div>
+  )}
+
+  {/* Rotate camera */}
+  <button
+    onClick={switchCamera}
+    className="absolute right-2 top-2 z-40 flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-black/50 text-white backdrop-blur-xl transition hover:bg-black/70"
+    aria-label="Switch camera"
+  >
+    <RotateCameraIcon />
+  </button>
+</div>
       {/* Controls */}
      <div className="absolute bottom-7 left-1/2 z-30 flex -translate-x-1/2 items-center gap-3 rounded-full border border-white/10 bg-black/50 p-3 shadow-2xl backdrop-blur-xl">
 
