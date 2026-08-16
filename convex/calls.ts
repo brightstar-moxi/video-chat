@@ -362,3 +362,29 @@ export const updateCameraState = mutation({
     throw new Error("You are not part of this call");
   },
 });
+
+export const getCallWithUsers = query({
+  args: {
+    callId: v.id("calls"),
+  },
+
+  handler: async (ctx, args) => {
+    const call = await ctx.db.get(args.callId);
+
+    if (!call) {
+      return null;
+    }
+
+    const caller =
+      await ctx.db.get(call.callerId);
+
+    const receiver =
+      await ctx.db.get(call.receiverId);
+
+    return {
+      ...call,
+      caller,
+      receiver,
+    };
+  },
+});
