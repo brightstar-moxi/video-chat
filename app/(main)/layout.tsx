@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
-import IncomingCallPopup from "./components/IncomingCall";
+// import IncomingCallPopup from "./components/IncomingCall";
 
 function VideoIcon() {
   return (
@@ -290,7 +290,7 @@ export default function MainLayout({
         {/* Page */}
         <main className="min-h-[calc(100vh-5rem)] px-5 py-8 pb-24 sm:px-8 lg:px-10">
           {children}
-           <IncomingCallPopup />
+           {/* <IncomingCallPopup /> */}
         </main>
       </div>
 
