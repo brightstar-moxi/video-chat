@@ -437,7 +437,7 @@ export default function DashboardPage() {
 
     {recentCalls?.length === 0 && (
       <div className="rounded-2xl border border-dashed border-white/[0.08] p-8 text-center text-sm text-white/30">
-        No recent calls
+        No recent calls yet
       </div>
     )}
   </div>
