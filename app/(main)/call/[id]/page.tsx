@@ -1265,10 +1265,100 @@ if (peerConnectionRef.current) {
     //       },
     //     ],
     //   });
-    const peerConnection = new RTCPeerConnection({
+//     const peerConnection = new RTCPeerConnection({
+//   iceServers: [
+//     {
+//       urls: "stun:stun.l.google.com:19302",
+//     },
+//   ],
+// });
+// var myPeerConnection = new RTCPeerConnection({
+//   iceServers: [
+//       {
+//         urls: "stun:stun.relay.metered.ca:80",
+//       },
+//       {
+//         urls: "turn:global.relay.metered.ca:80",
+//         username:  process.env.NEXT_PUBLIC_TURN_USERNAME,
+//         credential: process.env.NEXT_PUBLIC_TURN_CREDENTIAL,
+//       },
+//       {
+//         urls: "turn:global.relay.metered.ca:80?transport=tcp",
+//         username:  process.env.NEXT_PUBLIC_TURN_USERNAME,
+//         credential: process.env.NEXT_PUBLIC_TURN_CREDENTIAL,
+//       },
+//       {
+//         urls: "turn:global.relay.metered.ca:443",
+//         username:  process.env.NEXT_PUBLIC_TURN_USERNAME,
+//         credential: process.env.NEXT_PUBLIC_TURN_CREDENTIAL,
+//       },
+//       {
+//         urls: "turns:global.relay.metered.ca:443?transport=tcp",
+//         username:  process.env.NEXT_PUBLIC_TURN_USERNAME,
+//         credential: process.env.NEXT_PUBLIC_TURN_CREDENTIAL,
+//       },
+//   ],
+// });
+// peerConnection.oniceconnectionstatechange = () => {
+//   console.log(
+//     "ICE connection state:",
+//     peerConnection.iceConnectionState
+//   );
+// };
+
+// peerConnection.onconnectionstatechange = () => {
+//   console.log(
+//     "Peer connection state:",
+//     peerConnection.connectionState
+//   );
+// };
+
+// peerConnection.onicecandidateerror = (event) => {
+//   console.error(
+//     "ICE candidate error:",
+//     event
+//   );
+// };
+
+//     peerConnectionRef.current = peerConnection;
+
+//     localStreamRef.current
+//       .getTracks()
+//       .forEach((track) => {
+//         peerConnection.addTrack(
+//           track,
+//           localStreamRef.current!
+//         );
+//       });
+
+
+const peerConnection = new RTCPeerConnection({
   iceServers: [
     {
       urls: "stun:stun.l.google.com:19302",
+    },
+    {
+      urls: "stun:stun.relay.metered.ca:80",
+    },
+    {
+      urls: "turn:global.relay.metered.ca:80",
+      username: process.env.NEXT_PUBLIC_TURN_USERNAME,
+      credential: process.env.NEXT_PUBLIC_TURN_CREDENTIAL,
+    },
+    {
+      urls: "turn:global.relay.metered.ca:80?transport=tcp",
+      username: process.env.NEXT_PUBLIC_TURN_USERNAME,
+      credential: process.env.NEXT_PUBLIC_TURN_CREDENTIAL,
+    },
+    {
+      urls: "turn:global.relay.metered.ca:443",
+      username: process.env.NEXT_PUBLIC_TURN_USERNAME,
+      credential: process.env.NEXT_PUBLIC_TURN_CREDENTIAL,
+    },
+    {
+      urls: "turns:global.relay.metered.ca:443?transport=tcp",
+      username: process.env.NEXT_PUBLIC_TURN_USERNAME,
+      credential: process.env.NEXT_PUBLIC_TURN_CREDENTIAL,
     },
   ],
 });
@@ -1294,16 +1384,16 @@ peerConnection.onicecandidateerror = (event) => {
   );
 };
 
-    peerConnectionRef.current = peerConnection;
+peerConnectionRef.current = peerConnection;
 
-    localStreamRef.current
-      .getTracks()
-      .forEach((track) => {
-        peerConnection.addTrack(
-          track,
-          localStreamRef.current!
-        );
-      });
+localStreamRef.current
+  .getTracks()
+  .forEach((track) => {
+    peerConnection.addTrack(
+      track,
+      localStreamRef.current!
+    );
+  });
 
     // peerConnection.ontrack = (event) => {
     //   console.log("Remote stream received");
