@@ -1257,14 +1257,42 @@ if (peerConnectionRef.current) {
       return;
     }
 
-    const peerConnection =
-      new RTCPeerConnection({
-        iceServers: [
-          {
-            urls: "stun:stun.l.google.com:19302",
-          },
-        ],
-      });
+    // const peerConnection =
+    //   new RTCPeerConnection({
+    //     iceServers: [
+    //       {
+    //         urls: "stun:stun.l.google.com:19302",
+    //       },
+    //     ],
+    //   });
+    const peerConnection = new RTCPeerConnection({
+  iceServers: [
+    {
+      urls: "stun:stun.l.google.com:19302",
+    },
+  ],
+});
+
+peerConnection.oniceconnectionstatechange = () => {
+  console.log(
+    "ICE connection state:",
+    peerConnection.iceConnectionState
+  );
+};
+
+peerConnection.onconnectionstatechange = () => {
+  console.log(
+    "Peer connection state:",
+    peerConnection.connectionState
+  );
+};
+
+peerConnection.onicecandidateerror = (event) => {
+  console.error(
+    "ICE candidate error:",
+    event
+  );
+};
 
     peerConnectionRef.current = peerConnection;
 
@@ -1630,7 +1658,7 @@ useEffect(() => {
     ref={remoteVideoRef}
     autoPlay
     playsInline
-    className="absolute inset-0 h-full w-full object-cover"
+    className="absolute inset-0 h-full w-full object-cover scale-x-[-1]"
   />
 
   {/* Remote avatar */}
