@@ -114,13 +114,16 @@ export const startCall = mutation({
     }
 
     const callId = await ctx.db.insert("calls", {
-      callerId: args.callerId,
-      receiverId: args.receiverId,
-      type: args.type,
-      status: "ringing",
-      createdAt: Date.now(),
-    });
+  callerId: args.callerId,
+  receiverId: args.receiverId,
+  type: args.type,
+  status: "ringing",
 
+  callerCameraEnabled: args.type === "video",
+  receiverCameraEnabled: args.type === "video",
+
+  createdAt: Date.now(),
+});
     return callId;
   },
 });
@@ -386,5 +389,38 @@ export const getCallWithUsers = query({
       caller,
       receiver,
     };
+  },
+});
+
+
+export const setCameraState = mutation({
+  args: {
+    callId: v.id("calls"),
+    userId: v.id("users"),
+    enabled: v.boolean(),
+  },
+
+  handler: async (ctx, args) => {
+    const call = await ctx.db.get(args.callId);
+
+    if (!call) {
+      throw new Error("Call not found");
+    }
+
+    if (call.callerId === args.userId) {
+      await ctx.db.patch(call._id, {
+        callerCameraEnabled: args.enabled,
+      });
+      return;
+    }
+
+    if (call.receiverId === args.userId) {
+      await ctx.db.patch(call._id, {
+        receiverCameraEnabled: args.enabled,
+      });
+      return;
+    }
+
+    throw new Error("User is not part of this call");
   },
 });

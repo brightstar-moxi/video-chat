@@ -1061,7 +1061,9 @@ function PhoneOffIcon() {
   const router = useRouter();
 
   const callId = params.id as string;
-
+const setCameraState = useMutation(
+  api.calls.setCameraState
+);
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
 const [mediaReady, setMediaReady] = useState(false);
@@ -1092,6 +1094,11 @@ const [mediaReady, setMediaReady] = useState(false);
     : "skip"
 );
 
+const remoteCameraEnabled =
+  call?.callerId === currentUser?._id
+    ? call?.receiverCameraEnabled
+    : call?.callerCameraEnabled;
+
 const otherUser =
   call?.callerId === currentUser?._id
     ? call?.receiver
@@ -1115,6 +1122,10 @@ const otherUser =
   const endCall = useMutation(api.calls.endCall);
 const [facingMode, setFacingMode] =
   useState<"user" | "environment">("user");
+
+
+
+
 
 
   async function switchCamera() {
@@ -1667,22 +1678,47 @@ useEffect(() => {
   /*
    * Toggle camera
    */
-  function toggleCamera() {
-    const stream =
-      localStreamRef.current;
+  // function toggleCamera() {
+  //   const stream =
+  //     localStreamRef.current;
 
-    if (!stream) return;
+  //   if (!stream) return;
 
-    const track =
-      stream.getVideoTracks()[0];
+  //   const track =
+  //     stream.getVideoTracks()[0];
 
-    if (!track) return;
+  //   if (!track) return;
 
-    track.enabled = !track.enabled;
+  //   track.enabled = !track.enabled;
 
-    setCameraEnabled(track.enabled);
+  //   setCameraEnabled(track.enabled);
+  // }
+
+async function toggleCamera() {
+  const track = localStreamRef.current
+    ?.getVideoTracks()[0];
+
+  if (!track || !call || !currentUser) return;
+
+  const enabled = !track.enabled;
+
+  track.enabled = enabled;
+
+  setCameraEnabled(enabled);
+
+  try {
+    await setCameraState({
+      callId: call._id,
+      userId: currentUser._id,
+      enabled,
+    });
+  } catch (error) {
+    console.error(
+      "Failed to update camera state:",
+      error
+    );
   }
-
+}
   /*
    * Toggle microphone
    */
@@ -1741,18 +1777,70 @@ useEffect(() => {
 
   return (
     <main className="fixed inset-0 bg-black">
-      {/* Remote video */}
+      Remote video
     <div className="absolute inset-0 bg-[#08090d]">
   {/* Remote video */}
-  <video
+  {/* <video
     ref={remoteVideoRef}
     autoPlay
     playsInline
     className="absolute inset-0 h-full w-full object-cover scale-x-[-1]"
-  />
+  /> */}
+
+
+ 
+
+  {/* Remote video */}
+  {remoteCameraEnabled !== false && (
+    <video
+      ref={remoteVideoRef}
+      autoPlay
+      playsInline
+      className="absolute inset-0 h-full w-full object-cover"
+    />
+  )}
+
+  {/* Remote avatar when camera is OFF */}
+  {remoteCameraEnabled === false && (
+    <div className="absolute inset-0 flex flex-col items-center justify-center">
+      {otherUser?.image ? (
+        <img
+          src={otherUser.image}
+          alt={
+            otherUser.name ||
+            otherUser.username ||
+            "User"
+          }
+          className="h-28 w-28 rounded-full object-cover ring-4 ring-white/10"
+        />
+      ) : (
+        <div className="flex h-28 w-28 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-blue-500 text-4xl font-semibold text-white">
+          {(
+            otherUser?.name ||
+            otherUser?.username ||
+            "?"
+          )
+            .charAt(0)
+            .toUpperCase()}
+        </div>
+      )}
+
+      <p className="mt-5 text-xl font-semibold text-white">
+        {otherUser?.name ||
+          otherUser?.username ||
+          "User"}
+      </p>
+
+      <p className="mt-2 text-sm text-white/40">
+        Camera off
+      </p>
+    </div>
+  )}
+
+
 
   {/* Remote avatar */}
-  {!call?.answer && (
+  {/* {!call?.answer && (
     <div className="absolute inset-0 flex flex-col items-center justify-center">
       <div className="relative">
         {otherUser?.image ? (
@@ -1789,14 +1877,16 @@ useEffect(() => {
       </p>
     </div>
   )}
+</div> */}
+
 </div>
-<button
+{/* <button
   onClick={switchCamera}
   className="absolute right-4 top-4 z-40 flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-black/50 text-white shadow-xl backdrop-blur-xl transition hover:bg-black/70"
   aria-label="Switch camera"
 >
   <RotateCameraIcon />
-</button>
+</button> */}
 
      {/* Local preview */}
 <div className="absolute right-5 top-5 h-40 w-28 overflow-hidden rounded-2xl bg-[#11131a] shadow-2xl sm:h-48 sm:w-64">
