@@ -1778,7 +1778,7 @@ useEffect(() => {
   return (
     <main className="fixed inset-0 bg-black">
       Remote video
-    <div className="absolute inset-0 bg-[#08090d]">
+    {/* <div className="absolute inset-0 bg-[#08090d]"> */}
   {/* Remote video */}
   {/* <video
     ref={remoteVideoRef}
@@ -1791,17 +1791,17 @@ useEffect(() => {
  
 
   {/* Remote video */}
-  {remoteCameraEnabled !== false && (
+  {/* {remoteCameraEnabled !== false && (
     <video
       ref={remoteVideoRef}
       autoPlay
       playsInline
       className="absolute inset-0 h-full w-full object-cover"
     />
-  )}
+  )} */}
 
   {/* Remote avatar when camera is OFF */}
-  {remoteCameraEnabled === false && (
+  {/* {remoteCameraEnabled === false && (
     <div className="absolute inset-0 flex flex-col items-center justify-center">
       {otherUser?.image ? (
         <img
@@ -1835,7 +1835,7 @@ useEffect(() => {
         Camera off
       </p>
     </div>
-  )}
+  )} */}
 
 
 
@@ -1878,8 +1878,91 @@ useEffect(() => {
     </div>
   )}
 </div> */}
+<div className="absolute inset-0 overflow-hidden bg-[#08090d]">
+  {/* Remote video */}
+  <video
+    ref={remoteVideoRef}
+    autoPlay
+    playsInline
+    className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${
+      remoteCameraEnabled === false
+        ? "opacity-0"
+        : "opacity-100"
+    }`}
+  />
 
+  {/* Remote avatar when camera is off */}
+  {remoteCameraEnabled === false && (
+    <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#08090d]">
+      {otherUser?.image ? (
+        <img
+          src={otherUser.image}
+          alt={
+            otherUser.name ||
+            otherUser.username ||
+            "User"
+          }
+          className="h-28 w-28 rounded-full object-cover ring-4 ring-white/10 shadow-2xl sm:h-36 sm:w-36"
+        />
+      ) : (
+        <div className="flex h-28 w-28 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-blue-500 text-4xl font-semibold text-white ring-4 ring-white/10 sm:h-36 sm:w-36">
+          {(
+            otherUser?.name ||
+            otherUser?.username ||
+            "?"
+          )
+            .charAt(0)
+            .toUpperCase()}
+        </div>
+      )}
+
+      <p className="mt-6 text-lg font-semibold text-white">
+        {otherUser?.name ||
+          otherUser?.username ||
+          "User"}
+      </p>
+
+      <div className="mt-2 flex items-center gap-2 text-sm text-white/40">
+        <span className="h-2 w-2 rounded-full bg-white/30" />
+        Camera off
+      </div>
+    </div>
+  )}
+
+  {/* Calling state */}
+  {!call?.answer && (
+    <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#08090d]">
+      {otherUser?.image ? (
+        <img
+          src={otherUser.image}
+          alt={otherUser.name || "User"}
+          className="h-28 w-28 rounded-full object-cover ring-4 ring-violet-500/20 sm:h-36 sm:w-36"
+        />
+      ) : (
+        <div className="flex h-28 w-28 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-blue-500 text-4xl font-semibold sm:h-36 sm:w-36">
+          {(
+            otherUser?.name ||
+            otherUser?.username ||
+            "?"
+          )
+            .charAt(0)
+            .toUpperCase()}
+        </div>
+      )}
+
+      <p className="mt-6 text-xl font-semibold">
+        {otherUser?.name ||
+          otherUser?.username ||
+          "Calling..."}
+      </p>
+
+      <p className="mt-2 text-sm text-white/40">
+        Calling...
+      </p>
+    </div>
+  )}
 </div>
+{/* </div> */}
 {/* <button
   onClick={switchCamera}
   className="absolute right-4 top-4 z-40 flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-black/50 text-white shadow-xl backdrop-blur-xl transition hover:bg-black/70"
