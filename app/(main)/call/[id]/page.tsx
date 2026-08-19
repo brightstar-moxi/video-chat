@@ -1162,7 +1162,7 @@ const otherUser =
 const [facingMode, setFacingMode] =
   useState<"user" | "environment">("user");
 
-const [speakerEnabled, setSpeakerEnabled] = useState(true);
+// const [speakerEnabled, setSpeakerEnabled] = useState(true);
 
 
 
@@ -1856,17 +1856,17 @@ function formatDuration(seconds: number) {
 //speaker
 
 
+const [speakerEnabled, setSpeakerEnabled] = useState(false);
+
 function toggleSpeaker() {
-  const video = remoteVideoRef.current;
+  setSpeakerEnabled((previous) => !previous);
 
-  if (!video) return;
+  const remoteVideo = remoteVideoRef.current;
 
-  const nextState = !speakerEnabled;
+  if (!remoteVideo) return;
 
-  video.muted = !nextState;
-  video.volume = nextState ? 1 : 0;
-
-  setSpeakerEnabled(nextState);
+  remoteVideo.muted = false;
+  remoteVideo.volume = 1;
 }
   return (
     <main className="fixed inset-0 bg-black">
@@ -2233,25 +2233,17 @@ function toggleSpeaker() {
     <CameraIcon off={!cameraEnabled} />
   </button>
 
-  {/* speaker */}
+ {/* Speaker / Loud audio */}
 <button
   onClick={toggleSpeaker}
   className={`flex h-14 w-14 items-center justify-center rounded-full border transition active:scale-95 ${
     speakerEnabled
-      ? "border-white/10 bg-white/10 text-white hover:bg-white/20"
-      : "border-red-500/30 bg-red-500/20 text-red-300 hover:bg-red-500/30"
+      ? "border-violet-400/40 bg-violet-500 text-white shadow-lg shadow-violet-500/20"
+      : "border-white/10 bg-white/10 text-white/70 hover:bg-white/20 hover:text-white"
   }`}
-  aria-label={
-    speakerEnabled
-      ? "Mute speaker"
-      : "Enable speaker"
-  }
+  aria-label="Toggle loud speaker"
 >
-  {speakerEnabled ? (
-    <SpeakerIcon />
-  ) : (
-    <SpeakerOffIcon />
-  )}
+  <SpeakerIcon />
 </button>
 
   {/* End */}
