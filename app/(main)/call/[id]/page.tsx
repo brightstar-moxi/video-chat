@@ -1056,10 +1056,49 @@ function PhoneOffIcon() {
     </svg>
   );
 }
+
+
+function SpeakerIcon() {
+  return (
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M11 5 6 9H2v6h4l5 4V5Z" />
+      <path d="M15.5 8.5a5 5 0 0 1 0 7" />
+      <path d="M19 5a10 10 0 0 1 0 14" />
+    </svg>
+  );
+}
+
+function SpeakerOffIcon() {
+  return (
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M11 5 6 9H2v6h4l5 4V5Z" />
+      <path d="m23 9-6 6" />
+      <path d="m17 9 6 6" />
+    </svg>
+  );
+}
   const { userId } = useAuth();
   const params = useParams();
   const router = useRouter();
-
+const [callDuration, setCallDuration] = useState(0);
   const callId = params.id as string;
 const setCameraState = useMutation(
   api.calls.setCameraState
@@ -1123,7 +1162,7 @@ const otherUser =
 const [facingMode, setFacingMode] =
   useState<"user" | "environment">("user");
 
-
+const [speakerEnabled, setSpeakerEnabled] = useState(true);
 
 
 
@@ -1675,6 +1714,23 @@ useEffect(() => {
 
   addRemoteCandidates();
 }, [candidates]);
+
+
+//duration
+useEffect(() => {
+  if (call?.status !== "accepted") {
+    setCallDuration(0);
+    return;
+  }
+
+  const interval = setInterval(() => {
+    setCallDuration((previous) => previous + 1);
+  }, 1000);
+
+  return () => {
+    clearInterval(interval);
+  };
+}, [call?.status]);
   /*
    * Toggle camera
    */
@@ -1774,9 +1830,51 @@ useEffect(() => {
     router.push("/dashboard");
   }
 }, [call, router]);
+function formatDuration(seconds: number) {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor(
+    (seconds % 3600) / 60
+  );
+  const remainingSeconds = seconds % 60;
 
+  if (hours > 0) {
+    return `${hours
+      .toString()
+      .padStart(2, "0")}:${minutes
+      .toString()
+      .padStart(2, "0")}:${remainingSeconds
+      .toString()
+      .padStart(2, "0")}`;
+  }
+
+  return `${minutes
+    .toString()
+    .padStart(2, "0")}:${remainingSeconds
+    .toString()
+    .padStart(2, "0")}`;
+}
+//speaker
+
+
+function toggleSpeaker() {
+  const video = remoteVideoRef.current;
+
+  if (!video) return;
+
+  const nextState = !speakerEnabled;
+
+  video.muted = !nextState;
+  video.volume = nextState ? 1 : 0;
+
+  setSpeakerEnabled(nextState);
+}
   return (
     <main className="fixed inset-0 bg-black">
+      {call?.status === "accepted" && (
+  <div className="absolute left-1/2 top-5 z-30 -translate-x-1/2 rounded-full border border-white/10 bg-black/50 px-4 py-2 text-sm font-medium text-white shadow-lg backdrop-blur-xl">
+    {formatDuration(callDuration)}
+  </div>
+)}
       Remote video
     {/* <div className="absolute inset-0 bg-[#08090d]"> */}
   {/* Remote video */}
@@ -1972,10 +2070,10 @@ useEffect(() => {
 </button> */}
 
      {/* Local preview */}
-<div className="absolute right-5 top-5 h-40 w-28 overflow-hidden rounded-2xl bg-[#11131a] shadow-2xl sm:h-48 sm:w-64">
+{/* <div className="absolute right-5 top-5 h-40 w-28 overflow-hidden rounded-2xl bg-[#11131a] shadow-2xl sm:h-48 sm:w-64"> */}
 
   {/* Camera video */}
-  <video
+  {/* <video
     ref={localVideoRef}
     autoPlay
     muted
@@ -1983,10 +2081,10 @@ useEffect(() => {
     className={`h-full w-full object-cover scale-x-[-1] ${
       cameraEnabled ? "block" : "hidden"
     }`}
-  />
+  /> */}
 
   {/* Avatar when camera is off */}
-  {!cameraEnabled && (
+  {/* {!cameraEnabled && (
     <div className="absolute inset-0 flex flex-col items-center justify-center">
       {currentUser?.image ? (
         <img
@@ -2014,19 +2112,72 @@ useEffect(() => {
         Camera off
       </span>
     </div>
-  )}
+  )} */}
 
   {/* Rotate camera */}
-  <button
+  {/* <button
     onClick={switchCamera}
     className="absolute right-2 top-2 z-40 flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-black/50 text-white backdrop-blur-xl transition hover:bg-black/70"
     aria-label="Switch camera"
   >
     <RotateCameraIcon />
   </button>
+</div> */}
+
+
+
+<div className="absolute right-4 top-4 z-30 h-36 w-24 overflow-hidden rounded-2xl border border-white/10 bg-[#11131a] shadow-2xl sm:right-6 sm:top-6 sm:h-48 sm:w-32">
+  <video
+    ref={localVideoRef}
+    autoPlay
+    muted
+    playsInline
+    className={`h-full w-full object-cover scale-x-[-1] ${
+      cameraEnabled ? "block" : "hidden"
+    }`}
+  />
+
+  {!cameraEnabled && (
+    <div className="absolute inset-0 flex flex-col items-center justify-center">
+      {currentUser?.image ? (
+        <img
+          src={currentUser.image}
+          alt="You"
+          className="h-16 w-16 rounded-full object-cover"
+        />
+      ) : (
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-blue-500 text-xl font-semibold">
+          {(
+            currentUser?.name ||
+            currentUser?.username ||
+            "?"
+          )
+            .charAt(0)
+            .toUpperCase()}
+        </div>
+      )}
+
+      <span className="mt-2 text-[10px] text-white/50">
+        Camera off
+      </span>
+    </div>
+  )}
+
+  {/* Switch camera */}
+  {cameraEnabled && (
+    <button
+      onClick={switchCamera}
+      className="absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-black/60 text-white shadow-lg backdrop-blur-xl transition active:scale-90 hover:bg-black/80"
+      aria-label="Switch camera"
+    >
+      <RotateCameraIcon />
+    </button>
+  )}
 </div>
       {/* Controls */}
      <div className="absolute bottom-7 left-1/2 z-30 flex -translate-x-1/2 items-center gap-3 rounded-full border border-white/10 bg-black/50 p-3 shadow-2xl backdrop-blur-xl">
+
+
 
   {/* Microphone */}
   <button
@@ -2045,6 +2196,26 @@ useEffect(() => {
     <MicIcon off={!micEnabled} />
   </button>
 
+  {/* <button
+  onClick={toggleMicrophone}
+  className={`flex h-14 w-14 items-center justify-center rounded-full border transition active:scale-95 ${
+    micEnabled
+      ? "border-white/10 bg-white/10 text-white hover:bg-white/20"
+      : "border-red-500/30 bg-red-500 text-white hover:bg-red-400"
+  }`}
+  aria-label={
+    micEnabled
+      ? "Mute microphone"
+      : "Unmute microphone"
+  }
+>
+  {micEnabled ? (
+    <MicIcon />
+  ) : (
+    <MicOffIcon />
+  )}
+</button> */}
+
   {/* Camera */}
   <button
     onClick={toggleCamera}
@@ -2061,6 +2232,27 @@ useEffect(() => {
   >
     <CameraIcon off={!cameraEnabled} />
   </button>
+
+  {/* speaker */}
+<button
+  onClick={toggleSpeaker}
+  className={`flex h-14 w-14 items-center justify-center rounded-full border transition active:scale-95 ${
+    speakerEnabled
+      ? "border-white/10 bg-white/10 text-white hover:bg-white/20"
+      : "border-red-500/30 bg-red-500/20 text-red-300 hover:bg-red-500/30"
+  }`}
+  aria-label={
+    speakerEnabled
+      ? "Mute speaker"
+      : "Enable speaker"
+  }
+>
+  {speakerEnabled ? (
+    <SpeakerIcon />
+  ) : (
+    <SpeakerOffIcon />
+  )}
+</button>
 
   {/* End */}
   <button
