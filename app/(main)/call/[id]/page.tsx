@@ -1105,7 +1105,12 @@ const setCameraState = useMutation(
 );
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
-const [mediaReady, setMediaReady] = useState(false);
+
+const audioContextRef = useRef<AudioContext | null>(null);
+const gainNodeRef = useRef<GainNode | null>(null);
+const audioSourceRef = useRef<MediaElementAudioSourceNode | null>(null);
+
+  const [mediaReady, setMediaReady] = useState(false);
   const peerConnectionRef =
     useRef<RTCPeerConnection | null>(null);
 
@@ -1858,16 +1863,68 @@ function formatDuration(seconds: number) {
 
 const [speakerEnabled, setSpeakerEnabled] = useState(false);
 
+// function toggleSpeaker() {
+//   setSpeakerEnabled((previous) => !previous);
+
+//   const remoteVideo = remoteVideoRef.current;
+
+//   if (!remoteVideo) return;
+
+//   remoteVideo.muted = false;
+//   remoteVideo.volume = 1;
+
+
+
+  
+// }
+
 function toggleSpeaker() {
-  setSpeakerEnabled((previous) => !previous);
+  const video = remoteVideoRef.current;
 
-  const remoteVideo = remoteVideoRef.current;
+  if (!video) return;
 
-  if (!remoteVideo) return;
+  try {
+    if (!audioContextRef.current) {
+      const AudioContextClass =
+        window.AudioContext ||
+        (window as typeof window & {
+          webkitAudioContext?: typeof AudioContext;
+        }).webkitAudioContext;
 
-  remoteVideo.muted = false;
-  remoteVideo.volume = 1;
+      if (!AudioContextClass) return;
+
+      const audioContext = new AudioContextClass();
+
+      const source =
+        audioContext.createMediaElementSource(video);
+
+      const gainNode = audioContext.createGain();
+
+      source.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      audioContextRef.current = audioContext;
+      audioSourceRef.current = source;
+      gainNodeRef.current = gainNode;
+    }
+
+    const nextSpeakerState = !speakerEnabled;
+
+    if (audioContextRef.current.state === "suspended") {
+      audioContextRef.current.resume();
+    }
+
+    if (gainNodeRef.current) {
+      gainNodeRef.current.gain.value =
+        nextSpeakerState ? 2 : 1;
+    }
+
+    setSpeakerEnabled(nextSpeakerState);
+  } catch (error) {
+    console.error("Failed to boost speaker:", error);
+  }
 }
+
   return (
     <main className="fixed inset-0 bg-black">
       {call?.status === "accepted" && (
