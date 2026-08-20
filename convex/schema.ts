@@ -73,5 +73,33 @@ callCandidates: defineTable({
   candidate: v.string(),
 })
   .index("by_call", ["callId"]),
+
+
+  messages: defineTable({
+  senderId: v.id("users"),
+  receiverId: v.id("users"),
+
+  content: v.string(),
+
+  type: v.union(
+    v.literal("text")
+  ),
+
+  status: v.union(
+    v.literal("sent"),
+    v.literal("delivered"),
+    v.literal("read")
+  ),
+
+  createdAt: v.number(),
+})
+  .index("by_sender", ["senderId"])
+  .index("by_receiver", ["receiverId"])
+  .index("by_sender_receiver", [
+    "senderId",
+    "receiverId",
+  ]),
 });
+
+
 

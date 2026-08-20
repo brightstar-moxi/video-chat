@@ -360,7 +360,7 @@ export default function Home() {
             </div>
 
             <span className="text-lg font-semibold tracking-tight">
-              VideoChat
+              BrightstarChat
             </span>
           </Link>
 
@@ -645,7 +645,7 @@ export default function Home() {
             </div>
 
             <span className="text-sm font-semibold">
-              VideoChat
+              BrightstarChat
             </span>
           </Link>
 
