@@ -264,6 +264,7 @@ import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useAuth } from "@clerk/nextjs";
+import { Id } from "@/convex/_generated/dataModel";
 
 function SearchIcon() {
   return (
@@ -360,6 +361,8 @@ export default function MessagesPage() {
   const [message, setMessage] = useState("");
   const [search, setSearch] = useState("");
 
+  
+
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   const conversations = useQuery(
@@ -408,6 +411,47 @@ export default function MessagesPage() {
         .toLowerCase()
         .includes(search.toLowerCase());
     }) || [];
+
+    const friends = useQuery(
+  api.friends.getFriends,
+  currentUser
+    ? { userId: currentUser._id }
+    : "skip"
+);
+
+
+
+const filteredFriends =
+  friends
+    ?.filter(
+      (
+        friend
+      ): friend is NonNullable<typeof friend> =>
+        friend !== null
+    )
+    .filter((friend) => {
+      const name =
+        friend.name ||
+        friend.username ||
+        "";
+
+      return (
+        name
+          .toLowerCase()
+          .includes(search.toLowerCase()) ||
+        friend.username
+          .toLowerCase()
+          .includes(search.toLowerCase())
+      );
+    }) || [];
+
+  //   const [selectedUser, setSelectedUser] =
+  // useState<{
+  //   _id: Id<"users">;
+  //   name?: string;
+  //   username: string;
+  //   image?: string;
+  // } | null>(null);
 
   useEffect(() => {
     if (!selectedUserId) return;
@@ -496,6 +540,44 @@ export default function MessagesPage() {
               />
             </div>
           </div>
+          {/* Friend search results */}
+{search.trim() !== "" && filteredFriends.length > 0 && (
+  <div className="mb-3">
+    <p className="mb-2 px-3 text-xs font-medium text-white/40">
+      Friends
+    </p>
+
+    {filteredFriends.map((friend) => (
+      <button
+        key={friend._id}
+        onClick={() => {
+  setSelectedUserId(friend._id);
+  setSearch("");
+}}
+        className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition hover:bg-white/[0.06]"
+      >
+        <Avatar
+          name={
+            friend.name ||
+            friend.username
+          }
+          image={friend.image}
+        />
+
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium text-white">
+            {friend.name ||
+              friend.username}
+          </p>
+
+          <p className="truncate text-xs text-white/40">
+            @{friend.username}
+          </p>
+        </div>
+      </button>
+    ))}
+  </div>
+)}
 
           {/* Conversation list */}
           <div className="min-h-0 flex-1 overflow-y-auto p-2">
