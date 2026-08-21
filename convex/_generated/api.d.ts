@@ -10,7 +10,7 @@
 
 import type * as calls from "../calls.js";
 import type * as friends from "../friends.js";
-import type * as message from "../message.js";
+import type * as messages from "../messages.js";
 import type * as users from "../users.js";
 
 import type {
@@ -22,7 +22,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   calls: typeof calls;
   friends: typeof friends;
-  message: typeof message;
+  messages: typeof messages;
   users: typeof users;
 }>;
 
