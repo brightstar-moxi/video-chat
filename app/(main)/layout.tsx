@@ -355,7 +355,7 @@ export default async function MainLayout({
             </div>
 
             <span className="text-lg font-semibold tracking-tight">
-              VideoChat
+              Brightstar Chat
             </span>
           </Link>
         </div>

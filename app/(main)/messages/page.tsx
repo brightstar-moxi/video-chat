@@ -264,7 +264,7 @@ import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useAuth } from "@clerk/nextjs";
-import { Id } from "@/convex/_generated/dataModel";
+// import { Id } from "@/convex/_generated/dataModel";
 
 function SearchIcon() {
   return (
@@ -395,10 +395,39 @@ export default function MessagesPage() {
       ? { clerkId: userId }
       : "skip"
   );
-  const selectedConversation = conversations?.find(
-    (conversation) =>
-      conversation.user._id === selectedUserId
-  );
+//   const selectedConversation = conversations?.find(
+//     (conversation) =>
+//       conversation.user._id === selectedUserId
+//   );
+// const selectedFriend = friends?.find(
+//   (friend) =>
+//     friend?._id === selectedUserId
+// );
+
+// const selectedChatUser =
+//   selectedConversation?.user ||
+//   selectedFriend;
+
+const friends = useQuery(
+  api.friends.getFriends,
+  currentUser
+    ? { userId: currentUser._id }
+    : "skip"
+);
+
+const selectedConversation = conversations?.find(
+  (conversation) =>
+    conversation.user._id === selectedUserId
+);
+
+const selectedFriend = friends?.find(
+  (friend) =>
+    friend?._id === selectedUserId
+);
+
+const selectedChatUser =
+  selectedConversation?.user ||
+  selectedFriend;
 
   const filteredConversations =
     conversations?.filter((conversation) => {
@@ -412,12 +441,12 @@ export default function MessagesPage() {
         .includes(search.toLowerCase());
     }) || [];
 
-    const friends = useQuery(
-  api.friends.getFriends,
-  currentUser
-    ? { userId: currentUser._id }
-    : "skip"
-);
+//     const friends = useQuery(
+//   api.friends.getFriends,
+//   currentUser
+//     ? { userId: currentUser._id }
+//     : "skip"
+// );
 
 
 
@@ -659,7 +688,7 @@ const filteredFriends =
 
         {/* Chat area */}
         <section className="flex min-h-0 flex-col">
-          {!selectedConversation ? (
+        {!selectedChatUser ? (
             <div className="flex flex-1 flex-col items-center justify-center p-8 text-center">
               <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-violet-500/10 text-violet-300">
                 <MessageIcon />
@@ -677,44 +706,29 @@ const filteredFriends =
           ) : (
             <>
               {/* Chat header */}
-              <header className="flex items-center gap-3 border-b border-white/[0.07] px-5 py-4">
-                <div className="relative">
-                  <Avatar
-                    name={
-                      selectedConversation.user.name ||
-                      selectedConversation.user.username
-                    }
-                    image={
-                      selectedConversation.user.image
-                    }
-                  />
+          {/* Chat header */}
+<header className="flex items-center gap-3 border-b border-white/[0.07] px-5 py-4">
+  <div className="relative">
+    <Avatar
+      name={
+        selectedChatUser.name ||
+        selectedChatUser.username
+      }
+      image={selectedChatUser.image}
+    />
+  </div>
 
-                  {/* {selectedConversation.user.isOnline && (
-                    <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#0b0c12] bg-emerald-400" />
-                  )} */}
+  <div className="min-w-0">
+    <p className="truncate text-sm font-semibold">
+      {selectedChatUser.name ||
+        selectedChatUser.username}
+    </p>
 
-                  <div className="relative">
-  <Avatar
-    name={
-      selectedConversation.user.name ||
-      selectedConversation.user.username
-    }
-    image={selectedConversation.user.image}
-  />
-</div>
-                </div>
-
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold">
-                    {selectedConversation.user.name ||
-                      selectedConversation.user.username}
-                  </p>
-
-                <span className="text-xs text-white/35">
-  @{selectedConversation.user.username}
-</span>
-                </div>
-              </header>
+    <span className="text-xs text-white/35">
+      @{selectedChatUser.username}
+    </span>
+  </div>
+</header>
 
               {/* Messages */}
               <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-5">
