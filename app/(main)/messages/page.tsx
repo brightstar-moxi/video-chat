@@ -264,6 +264,10 @@ import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useAuth } from "@clerk/nextjs";
+import EmojiPicker, {
+  EmojiClickData,
+  Theme,
+} from "emoji-picker-react";
 // import { Id } from "@/convex/_generated/dataModel";
 
 function SearchIcon() {
@@ -361,7 +365,8 @@ export default function MessagesPage() {
   const [message, setMessage] = useState("");
   const [search, setSearch] = useState("");
 
-  
+  const [showEmojiPicker, setShowEmojiPicker] =
+  useState(false);
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
@@ -499,6 +504,14 @@ const filteredFriends =
       behavior: "smooth",
     });
   }, [messages]);
+
+  function handleEmojiClick(
+  emojiData: EmojiClickData
+) {
+  setMessage((currentMessage) =>
+    currentMessage + emojiData.emoji
+  );
+}
 
   async function handleSendMessage() {
     if (!selectedUserId) return;
@@ -787,9 +800,9 @@ const filteredFriends =
               </div>
 
               {/* Message input */}
-              <div className="border-t border-white/[0.07] p-4">
-                <div className="flex items-end gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.025] p-2">
-                  <input
+              {/* <div className="border-t border-white/[0.07] p-4">
+                <div className="flex items-end gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.025] p-2"> */}
+                  {/* <input
                     value={message}
                     onChange={(event) =>
                       setMessage(event.target.value)
@@ -797,18 +810,73 @@ const filteredFriends =
                     onKeyDown={handleKeyDown}
                     placeholder="Write a message..."
                     className="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm text-white outline-none placeholder:text-white/25"
-                  />
+                  /> */}
 
-                  <button
+                  {/* <button
                     onClick={handleSendMessage}
                     disabled={!message.trim()}
                     className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-500 text-white transition hover:bg-violet-400 disabled:cursor-not-allowed disabled:opacity-40"
                     aria-label="Send message"
                   >
                     <SendIcon />
-                  </button>
-                </div>
-              </div>
+                  </button> */}
+                {/* </div>
+              </div> */}
+
+
+              {/* Message input */}
+<div className="relative border-t border-white/[0.07] p-4">
+
+  {/* Emoji picker */}
+  {showEmojiPicker && (
+    <div className="absolute bottom-[76px] left-4 z-50">
+      <EmojiPicker
+        onEmojiClick={handleEmojiClick}
+       theme={Theme.DARK}
+        width={320}
+        height={400}
+      />
+    </div>
+  )}
+
+  <div className="flex items-end gap-2 rounded-2xl border border-white/[0.08] bg-white/[0.025] p-2">
+
+    {/* Emoji button */}
+    <button
+      type="button"
+      onClick={() =>
+        setShowEmojiPicker((current) => !current)
+      }
+      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-xl text-white/50 transition hover:bg-white/[0.06] hover:text-white"
+      aria-label="Add emoji"
+    >
+      😊
+    </button>
+
+    {/* Message input */}
+    <input
+      value={message}
+      onChange={(event) =>
+        setMessage(event.target.value)
+      }
+      onKeyDown={handleKeyDown}
+      placeholder="Write a message..."
+      className="min-w-0 flex-1 bg-transparent px-2 py-2 text-sm text-white outline-none placeholder:text-white/25"
+    />
+
+    {/* Send button */}
+    <button
+      type="button"
+      onClick={handleSendMessage}
+      disabled={!message.trim()}
+      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-500 text-white transition hover:bg-violet-400 disabled:cursor-not-allowed disabled:opacity-40"
+      aria-label="Send message"
+    >
+      <SendIcon />
+    </button>
+
+  </div>
+</div>
             </>
           )}
         </section>

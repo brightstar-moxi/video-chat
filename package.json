@@ -11,6 +11,7 @@
   "dependencies": {
     "@clerk/nextjs": "^7.7.1",
     "convex": "^1.43.0",
+    "emoji-picker-react": "^4.19.1",
     "next": "16.3.0",
     "react": "19.2.8",
     "react-dom": "19.2.8"
