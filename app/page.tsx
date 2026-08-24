@@ -360,7 +360,7 @@ export default function Home() {
             </div>
 
             <span className="text-lg font-semibold tracking-tight">
-              BrightstarChat
+              Brightstar Chat
             </span>
           </Link>
 

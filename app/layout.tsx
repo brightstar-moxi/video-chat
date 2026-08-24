@@ -34,7 +34,7 @@ import "./globals.css";
 import IncomingCall from "./(main)/components/IncomingCall";
 
 export const metadata: Metadata = {
-  title: "Video Chat",
+  title: "Brightstar Chat",
   description: "Modern social video communication",
 };
 
