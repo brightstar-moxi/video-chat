@@ -1183,12 +1183,12 @@ const [facingMode, setFacingMode] =
       : "user";
 
   try {
-    // Request the opposite camera
+    // Request the other camera without exact constraints
     const newStream =
       await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: {
-            exact: nextFacingMode,
+            ideal: nextFacingMode,
           },
         },
         audio: false,
@@ -1204,7 +1204,7 @@ const [facingMode, setFacingMode] =
     const connection =
       peerConnectionRef.current;
 
-    // Replace the video being sent through WebRTC
+    // Find the current WebRTC video sender
     const sender = connection
       ?.getSenders()
       .find(
@@ -1212,40 +1212,33 @@ const [facingMode, setFacingMode] =
           sender.track?.kind === "video"
       );
 
+    // Replace outgoing camera track
     if (sender) {
-      await sender.replaceTrack(
-        newVideoTrack
-      );
+      await sender.replaceTrack(newVideoTrack);
     }
 
-    // Get the existing audio track
-    const audioTracks =
-      stream.getAudioTracks();
+    const audioTracks = stream.getAudioTracks();
 
-    // Stop only the old camera
-    stream.getVideoTracks().forEach(
-      (track) => track.stop()
-    );
+    // Stop the old camera only
+    stream.getVideoTracks().forEach((track) => {
+      track.stop();
+    });
 
-    // Create the new combined stream
-    const updatedStream =
-      new MediaStream([
-        ...audioTracks,
-        newVideoTrack,
-      ]);
+    // Rebuild the local stream with old audio + new video
+    const updatedStream = new MediaStream([
+      ...audioTracks,
+      newVideoTrack,
+    ]);
 
-    localStreamRef.current =
-      updatedStream;
+    localStreamRef.current = updatedStream;
 
-    // Update local video preview
     if (localVideoRef.current) {
-      localVideoRef.current.srcObject =
-        updatedStream;
+      localVideoRef.current.srcObject = updatedStream;
 
       await localVideoRef.current.play().catch(
         (error) => {
           console.error(
-            "Local video play error:",
+            "Failed to play local video:",
             error
           );
         }
@@ -1255,7 +1248,7 @@ const [facingMode, setFacingMode] =
     setFacingMode(nextFacingMode);
 
     console.log(
-      "Camera switched to:",
+      "Camera switched:",
       nextFacingMode
     );
   } catch (error) {
@@ -1263,109 +1256,8 @@ const [facingMode, setFacingMode] =
       "Failed to switch camera:",
       error
     );
-
-    // Fallback for devices that don't support exact facingMode
-    try {
-      const fallbackStream =
-        await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: nextFacingMode,
-          },
-          audio: false,
-        });
-
-      const newVideoTrack =
-        fallbackStream.getVideoTracks()[0];
-
-      if (!newVideoTrack) return;
-
-      const connection =
-        peerConnectionRef.current;
-
-      const sender = connection
-        ?.getSenders()
-        .find(
-          (sender) =>
-            sender.track?.kind === "video"
-        );
-
-      if (sender) {
-        await sender.replaceTrack(
-          newVideoTrack
-        );
-      }
-
-      const audioTracks =
-        stream.getAudioTracks();
-
-      stream.getVideoTracks().forEach(
-        (track) => track.stop()
-      );
-
-      const updatedStream =
-        new MediaStream([
-          ...audioTracks,
-          newVideoTrack,
-        ]);
-
-      localStreamRef.current =
-        updatedStream;
-
-      if (localVideoRef.current) {
-        localVideoRef.current.srcObject =
-          updatedStream;
-      }
-
-      setFacingMode(nextFacingMode);
-    } catch (fallbackError) {
-      console.error(
-        "Camera switch fallback failed:",
-        fallbackError
-      );
-    }
   }
 }
-  /*
-   * Create local camera/microphone
-   */
-  useEffect(() => {
-    let cancelled = false;
-
-    async function startMedia() {
-      try {
-        const stream =
-          await navigator.mediaDevices.getUserMedia({
-            video: true,
-            audio: true,
-          });
-
-        if (cancelled) {
-          stream.getTracks().forEach((track) =>
-            track.stop()
-          );
-          return;
-        }
-
-        localStreamRef.current = stream;
-
-        if (localVideoRef.current) {
-          localVideoRef.current.srcObject = stream;
-        }
-        setMediaReady(true);
-      } catch (error) {
-        console.error(
-          "Camera/microphone error:",
-          error
-        );
-      }
-    }
-
-    startMedia();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   /*
    * Create WebRTC connection
