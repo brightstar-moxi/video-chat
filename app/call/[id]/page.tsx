@@ -1367,7 +1367,7 @@ const [facingMode, setFacingMode] =
     };
   }, []);
 
-  
+
  async function switchCamera() {
   const stream = localStreamRef.current;
 
@@ -2206,7 +2206,7 @@ function toggleSpeaker() {
     ref={remoteVideoRef}
     autoPlay
     playsInline
-    className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${
+    className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 scale-x-[-1] ${
       remoteCameraEnabled === false
         ? "opacity-0"
         : "opacity-100"
