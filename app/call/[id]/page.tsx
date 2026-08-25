@@ -1177,22 +1177,18 @@ const [facingMode, setFacingMode] =
 
   if (!stream) return;
 
-  const currentVideoTrack =
-    stream.getVideoTracks()[0];
-
-  if (!currentVideoTrack) return;
-
   const nextFacingMode =
     facingMode === "user"
       ? "environment"
       : "user";
 
   try {
+    // Request the opposite camera
     const newStream =
       await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: {
-            ideal: nextFacingMode,
+            exact: nextFacingMode,
           },
         },
         audio: false,
@@ -1201,18 +1197,20 @@ const [facingMode, setFacingMode] =
     const newVideoTrack =
       newStream.getVideoTracks()[0];
 
-    if (!newVideoTrack) return;
+    if (!newVideoTrack) {
+      throw new Error("No video track found");
+    }
 
     const connection =
       peerConnectionRef.current;
 
-    const sender =
-      connection
-        ?.getSenders()
-        .find(
-          (sender) =>
-            sender.track?.kind === "video"
-        );
+    // Replace the video being sent through WebRTC
+    const sender = connection
+      ?.getSenders()
+      .find(
+        (sender) =>
+          sender.track?.kind === "video"
+      );
 
     if (sender) {
       await sender.replaceTrack(
@@ -1220,31 +1218,111 @@ const [facingMode, setFacingMode] =
       );
     }
 
-    currentVideoTrack.stop();
-
+    // Get the existing audio track
     const audioTracks =
       stream.getAudioTracks();
 
+    // Stop only the old camera
+    stream.getVideoTracks().forEach(
+      (track) => track.stop()
+    );
+
+    // Create the new combined stream
     const updatedStream =
       new MediaStream([
-        newVideoTrack,
         ...audioTracks,
+        newVideoTrack,
       ]);
 
     localStreamRef.current =
       updatedStream;
 
+    // Update local video preview
     if (localVideoRef.current) {
       localVideoRef.current.srcObject =
         updatedStream;
+
+      await localVideoRef.current.play().catch(
+        (error) => {
+          console.error(
+            "Local video play error:",
+            error
+          );
+        }
+      );
     }
 
     setFacingMode(nextFacingMode);
+
+    console.log(
+      "Camera switched to:",
+      nextFacingMode
+    );
   } catch (error) {
     console.error(
       "Failed to switch camera:",
       error
     );
+
+    // Fallback for devices that don't support exact facingMode
+    try {
+      const fallbackStream =
+        await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: nextFacingMode,
+          },
+          audio: false,
+        });
+
+      const newVideoTrack =
+        fallbackStream.getVideoTracks()[0];
+
+      if (!newVideoTrack) return;
+
+      const connection =
+        peerConnectionRef.current;
+
+      const sender = connection
+        ?.getSenders()
+        .find(
+          (sender) =>
+            sender.track?.kind === "video"
+        );
+
+      if (sender) {
+        await sender.replaceTrack(
+          newVideoTrack
+        );
+      }
+
+      const audioTracks =
+        stream.getAudioTracks();
+
+      stream.getVideoTracks().forEach(
+        (track) => track.stop()
+      );
+
+      const updatedStream =
+        new MediaStream([
+          ...audioTracks,
+          newVideoTrack,
+        ]);
+
+      localStreamRef.current =
+        updatedStream;
+
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject =
+          updatedStream;
+      }
+
+      setFacingMode(nextFacingMode);
+    } catch (fallbackError) {
+      console.error(
+        "Camera switch fallback failed:",
+        fallbackError
+      );
+    }
   }
 }
   /*
